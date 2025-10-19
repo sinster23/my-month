@@ -50,7 +50,7 @@ exports.login =  async (req, res) => {
     res.cookie('token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: 'None',
       maxAge: 1000 * 60 * 60 // 1 hour
     });
 
@@ -66,7 +66,6 @@ exports.logout = (req, res) => {
   res.clearCookie('token', { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production' });
   res.json({ message: 'Logged out' });
 };
-
 
 exports.me =  async (req, res) => {
   // authMiddleware attaches req.user
