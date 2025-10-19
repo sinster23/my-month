@@ -1,8 +1,10 @@
 "use client";
 import { useState } from "react";
 import { MessageSquare, Sparkles, ArrowRight, Heart, Bot } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function ChatbotSection() {
+  const router = useRouter();
   return (
     <section id="chatbot" className="relative py-24 overflow-hidden">
       {/* Background Image with Overlay */}
@@ -53,13 +55,13 @@ export default function ChatbotSection() {
 
             {/* Description */}
             <p className="text-gray-300 text-lg leading-relaxed" style={{ fontFamily: 'Inter, sans-serif' }}>
-              Meet your compassionate AI companion—trained to answer questions about periods, reproductive health, and faith perspectives with care and sensitivity. Get instant, judgment-free support anytime you need it.
+              Meet your compassionate AI companion <span className="text-red-500">Noor AI</span>—trained to answer questions about periods, reproductive health, and faith perspectives with care and sensitivity. Get instant, judgment-free support anytime you need it.
             </p>
 
             {/* CTA Button */}
             <div>
               <button
-                onClick={() => window.location.href = "/chatbot"}
+                onClick={() => router.push("/chatbot")}
                 className="group relative px-10 py-5 bg-red-500 hover:bg-red-600 text-white font-bold rounded-full text-lg transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-105 overflow-hidden"
                 style={{ fontFamily: 'Poppins, sans-serif' }}
               >
@@ -100,7 +102,7 @@ export default function ChatbotSection() {
                   </div>
                   <div>
                     <h3 className="text-white font-bold text-lg" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                      AI Health Companion
+                      Noor AI
                     </h3>
                     <p className="text-red-100 text-sm">Always here to help</p>
                   </div>

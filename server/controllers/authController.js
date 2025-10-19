@@ -27,45 +27,56 @@ exports.register= async (req, res) => {
   }
 };
 
+
 // LOGIN
-exports.login =  async (req, res) => {
+exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    if (!email || !password) return res.status(400).json({ message: 'Email and password required' });
+    if (!email || !password)
+      return res.status(400).json({ message: "Email and password required" });
 
     const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ message: 'Invalid credentials' });
+    if (!user) return res.status(400).json({ message: "Invalid credentials" });
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
+    if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
 
-    // Create JWT
     const payload = { id: user._id, email: user.email, role: user.role };
-    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || '1h' });
-
-    // Option A: Send token in response body
-    // res.json({ token });
-
-    // Option B (recommended): Send as secure httpOnly cookie
-    res.cookie('token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'None',
-      maxAge: 1000 * 60 * 60 // 1 hour
+    const token = jwt.sign(payload, process.env.JWT_SECRET, {
+      expiresIn: process.env.JWT_EXPIRES_IN || "1h",
     });
 
-    res.json({ message: 'Logged in', user: { id: user._id, email: user.email, name: user.name } });
+    const isProduction = process.env.NODE_ENV === "production";
+
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: isProduction, // true only in production (HTTPS)
+      sameSite: isProduction ? "none" : "lax", // 'none' for cross-site cookies (production)
+      maxAge: 1000 * 60 * 60, // 1 hour
+    });
+
+    res.json({
+      message: "Logged in",
+      user: { id: user._id, email: user.email, name: user.name },
+    });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: "Server error" });
   }
 };
 
-// LOGOUT (clear cookie)
+// LOGOUT
 exports.logout = (req, res) => {
-  res.clearCookie('token', { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production' });
-  res.json({ message: 'Logged out' });
+  const isProduction = process.env.NODE_ENV === "production";
+
+  res.clearCookie("token", {
+    httpOnly: true,
+    sameSite: isProduction ? "none" : "lax",
+    secure: isProduction,
+  });
+  res.json({ message: "Logged out" });
 };
+
 
 exports.me =  async (req, res) => {
   // authMiddleware attaches req.user

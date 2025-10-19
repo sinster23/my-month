@@ -16,8 +16,8 @@ export default function Navbar() {
     { name: "Home", href: "/" },
     { name: "Faith", href: "/faith" },
     { name: "Stories", href: "/stories" },
-    { name: "Chatbot", href: "/chatbot" },
-    { name: "Community", href: "/forum" },
+    { name: "Noor AI", href: "/chatbot" },
+    { name: "CareHub", href: "/carehub" },
   ];
 
   useEffect(() => {
@@ -100,7 +100,7 @@ export default function Navbar() {
             <div className="flex-shrink-0">
               <button
                 onClick={() => handleNavClick("/")}
-                className="text-2xl font-bold text-white hover:text-red-500 transition-colors duration-300"
+                className="text-2xl font-bold text-white transition-colors duration-300 cursor-pointer"
               >
                 <span className="text-red-600">My</span>Month
               </button>
@@ -112,10 +112,28 @@ export default function Navbar() {
                 <button
                   key={link.name}
                   onClick={() => handleNavClick(link.href)}
-                  className="group relative text-gray-200 hover:text-white font-medium text-base transition-colors duration-300"
+                  className={`group relative font-medium text-base transition-all duration-300 cursor-pointer ${
+                    link.name === "Noor AI"
+                      ? "px-6 py-2.5 rounded-full text-white"
+                      : "text-gray-200 hover:text-white"
+                  }`}
                 >
-                  {link.name}
-                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-red-600 to-red-400 group-hover:w-full transition-all duration-300" />
+                  {link.name === "Noor AI" ? (
+                    <>
+                      <span className="absolute inset-0 rounded-full bg-gradient-to-r from-red-500 via-red-600 to-rose-600 opacity-75 blur-sm group-hover:opacity-100 group-hover:blur-md transition-all duration-300" />
+                      <span className="absolute inset-0 rounded-full bg-gradient-to-r from-red-500 via-red-600 to-rose-600 p-[2px]">
+                        <span className="flex h-full w-full items-center justify-center rounded-full bg-black/90 backdrop-blur-sm">
+                          <span className="relative z-10">{link.name}</span>
+                        </span>
+                      </span>
+                      <span className="relative z-10">{link.name}</span>
+                    </>
+                  ) : (
+                    <>
+                      {link.name}
+                      <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-red-600 to-red-400 group-hover:w-full transition-all duration-300" />
+                    </>
+                  )}
                 </button>
               ))}
             </div>
@@ -126,7 +144,7 @@ export default function Navbar() {
                 <div className="relative">
                   <button
                     onClick={() => setShowDropdown(!showDropdown)}
-                    className="flex items-center space-x-3 group"
+                    className="flex items-center space-x-3 group cursor-pointer"
                   >
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-600 to-red-700 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-red-900/30 group-hover:shadow-xl group-hover:shadow-red-900/50 transition-all duration-300 group-hover:scale-105">
                       {getInitials(user.name)}
@@ -154,14 +172,14 @@ export default function Navbar() {
                               setShowDropdown(false);
                               handleNavClick('/profile');
                             }}
-                            className="w-full px-4 py-2 text-left text-gray-200 hover:bg-red-900/20 hover:text-white transition-colors flex items-center space-x-2"
+                            className="w-full px-4 py-2 text-left text-gray-200 hover:bg-red-900/20 hover:text-white transition-colors flex items-center space-x-2 cursor-pointer"
                           >
                             <User className="w-4 h-4" />
                             <span>Profile</span>
                           </button>
                           <button
                             onClick={handleLogout}
-                            className="w-full px-4 py-2 text-left text-gray-200 hover:bg-red-900/20 hover:text-white transition-colors flex items-center space-x-2"
+                            className="w-full px-4 py-2 text-left text-gray-200 hover:bg-red-900/20 hover:text-white transition-colors flex items-center space-x-2 cursor-pointer"
                           >
                             <LogOut className="w-4 h-4" />
                             <span>Logout</span>
@@ -174,7 +192,7 @@ export default function Navbar() {
               ) : (
                 <button
                   onClick={() => setShowModal(true)}
-                  className="group relative px-6 py-2.5 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold rounded-full transition-all duration-300 shadow-lg shadow-red-900/30 hover:shadow-xl hover:shadow-red-900/50 hover:scale-105"
+                  className="group relative px-6 py-2.5 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold rounded-full transition-all duration-300 shadow-lg shadow-red-900/30 hover:shadow-xl hover:shadow-red-900/50 hover:scale-105 cursor-pointer"
                 >
                   <span className="relative z-10">Register</span>
                   <div className="absolute inset-0 bg-white/20 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -186,7 +204,7 @@ export default function Navbar() {
             <div className="md:hidden">
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="text-gray-200 hover:text-white focus:outline-none"
+                className="text-gray-200 hover:text-white focus:outline-none cursor-pointer"
                 aria-label="Toggle menu"
               >
                 <svg
@@ -227,9 +245,25 @@ export default function Navbar() {
               <button
                 key={link.name}
                 onClick={() => handleNavClick(link.href)}
-                className="block w-full text-left px-4 py-3 text-gray-200 hover:text-white hover:bg-red-900/20 rounded-lg font-medium transition-all duration-200"
+                className={`block w-full text-left px-4 py-3 font-medium transition-all duration-200 rounded-lg cursor-pointer ${
+                  link.name === "Noor AI"
+                    ? "relative overflow-hidden"
+                    : "text-gray-200 hover:text-white hover:bg-red-900/20"
+                }`}
               >
-                {link.name}
+                {link.name === "Noor AI" ? (
+                  <>
+                    <span className="absolute inset-0 bg-gradient-to-r from-red-500 via-red-600 to-rose-600 opacity-50 blur-md" />
+                    <span className="absolute inset-0 bg-gradient-to-r from-red-500 via-red-600 to-rose-600 p-[2px] rounded-lg">
+                      <span className="flex h-full w-full items-center px-4 rounded-lg bg-black/90 backdrop-blur-sm">
+                        <span className="relative z-10 text-white">{link.name}</span>
+                      </span>
+                    </span>
+                    <span className="relative z-10 text-white">{link.name}</span>
+                  </>
+                ) : (
+                  link.name
+                )}
               </button>
             ))}
             
@@ -251,7 +285,7 @@ export default function Navbar() {
                         handleNavClick('/profile');
                         setIsMobileMenuOpen(false);
                       }}
-                      className="w-full px-3 py-2 text-left text-gray-200 hover:bg-red-900/20 hover:text-white rounded transition-colors flex items-center space-x-2"
+                      className="w-full px-3 py-2 text-left text-gray-200 hover:bg-red-900/20 hover:text-white rounded transition-colors flex items-center space-x-2 cursor-pointer"
                     >
                       <User className="w-4 h-4" />
                       <span>Profile</span>
@@ -261,7 +295,7 @@ export default function Navbar() {
                         handleLogout();
                         setIsMobileMenuOpen(false);
                       }}
-                      className="w-full px-3 py-2 text-left text-gray-200 hover:bg-red-900/20 hover:text-white rounded transition-colors flex items-center space-x-2"
+                      className="w-full px-3 py-2 text-left text-gray-200 hover:bg-red-900/20 hover:text-white rounded transition-colors flex items-center space-x-2 cursor-pointer"
                     >
                       <LogOut className="w-4 h-4" />
                       <span>Logout</span>
@@ -275,7 +309,7 @@ export default function Navbar() {
                   setShowModal(true);
                   setIsMobileMenuOpen(false);
                 }}
-                className="block w-full px-4 py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold rounded-lg transition-all duration-300 shadow-lg shadow-red-900/30 text-center"
+                className="block w-full px-4 py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold rounded-lg transition-all duration-300 shadow-lg shadow-red-900/30 text-center cursor-pointer"
               >
                 Register
               </button>

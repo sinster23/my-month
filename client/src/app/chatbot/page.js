@@ -1,22 +1,43 @@
 "use client";
-import React, { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Menu, Plus, Paperclip, Mic, Sparkles, Calendar, Heart, Activity, BookOpen, Droplets, Brain, Copy, Check, ThumbsUp, ThumbsDown, RotateCcw } from 'lucide-react';
+import React, { useState, useRef, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Send,
+  Menu,
+  Plus,
+  Paperclip,
+  Mic,
+  Sparkles,
+  Calendar,
+  Heart,
+  Activity,
+  BookOpen,
+  Droplets,
+  Brain,
+  Copy,
+  Check,
+  ThumbsUp,
+  ThumbsDown,
+  RotateCcw,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export default function MenstruationChatbot() {
   const [messages, setMessages] = useState([]);
-  const [input, setInput] = useState('');
+  const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [darkMode, setDarkMode] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [user, setUser] = useState(null);
   const [isLoadingUser, setIsLoadingUser] = useState(true);
   const [copiedIndex, setCopiedIndex] = useState(null);
-  const [typingText, setTypingText] = useState('');
-  const [fullResponseText, setFullResponseText] = useState('');
+  const [typingText, setTypingText] = useState("");
+  const [fullResponseText, setFullResponseText] = useState("");
   const messagesEndRef = useRef(null);
 
+  const [chats, setChats] = useState([]);
+  const [currentChatId, setCurrentChatId] = useState(null);
+  const [currentChatType, setCurrentChatType] = useState("chat"); // 'chat', 'about', 'docs'
   const router = useRouter();
 
   const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
@@ -29,11 +50,93 @@ export default function MenstruationChatbot() {
     "What are ovulation symptoms?",
     "Best foods during period",
     "Menstrual cup vs tampons",
-    "PMS mood management"
+    "PMS mood management",
   ];
 
+  const aboutNoorContent = `# Hello from Noor AI! 👋
+
+I'm your AI-powered menstrual health companion, designed to provide personalized guidance, track your cycle, and answer all your period-related questions.
+
+## What I Can Help With:
+
+- **Cycle Tracking & Predictions**: Get accurate period predictions based on your history
+- **Symptom Management**: Find relief for cramps, mood swings, and other period symptoms
+- **Health Education**: Learn about menstrual health, hormones, and your body
+- **Product Recommendations**: Discover the best products for your needs
+- **Nutrition & Lifestyle**: Get personalized diet and exercise advice
+- **Emotional Support**: I'm here to listen and provide guidance
+
+## Why Choose Noor AI?
+
+I combine cutting-edge AI technology with evidence-based health information to give you reliable, personalized support. Whether you're tracking your cycle, managing symptoms, or just want to understand your body better, I'm here 24/7 to help.
+
+---
+
+*Remember: While I provide helpful information and support, I'm not a replacement for professional medical advice. Always consult with healthcare professionals for medical concerns.*
+
+Feel free to ask me anything about menstrual health!`;
+
+  const documentationContent = `# Noor AI Documentation 📚
+
+Welcome to the complete guide for using Noor AI and making the most of your menstrual health companion.
+
+## Getting Started
+
+Simply type your questions about menstrual health, cycle tracking, or wellness tips in the chat box below. I'll provide personalized responses based on your needs.
+
+### Example Questions You Can Ask:
+- "When is my next period likely to start?"
+- "How can I manage period cramps naturally?"
+- "What foods should I eat during my period?"
+- "Can you explain the phases of my menstrual cycle?"
+- "What are the signs of ovulation?"
+
+## Features
+
+### 💬 Chat History
+Sign in to automatically save your conversations. Access past chats anytime from the sidebar. Your chat history is securely stored and only accessible to you.
+
+### 🔒 Privacy & Security
+Your conversations are private and secure. We use end-to-end encryption to protect your sensitive health data. We never share your personal information with third parties.
+
+### 🎯 Personalized Responses
+I learn from your conversations to provide more personalized advice over time. The more you chat with me, the better I understand your specific needs.
+
+### 📊 Cycle Tracking
+Track your period dates, symptoms, flow intensity, and mood changes. I'll use this data to provide accurate predictions and personalized insights.
+
+## Tips for Best Results
+
+1. **Be Specific**: The more details you provide, the better I can help
+2. **Track Regularly**: Consistent tracking leads to more accurate predictions
+3. **Ask Follow-ups**: Don't hesitate to ask for clarification or more information
+4. **Use Natural Language**: Chat with me like you would with a friend
+
+## Advanced Features
+
+### Markdown Support
+I support rich text formatting including:
+- **Bold text** for emphasis
+- *Italic text* for subtle highlights
+- Lists and bullet points
+- Code blocks for technical information
+- Links to helpful resources
+
+### Message Actions
+- **Copy**: Copy any message to your clipboard
+- **Like/Dislike**: Help me improve by rating responses
+- **Regenerate**: Get a different response if needed
+
+## Privacy Notice
+
+All conversations are encrypted and stored securely. You can delete your chat history anytime from your account settings. We comply with GDPR and HIPAA regulations for health data protection.
+
+---
+
+Have questions about how to use Noor AI? Just ask me below!`;
+
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   useEffect(() => {
@@ -44,6 +147,14 @@ export default function MenstruationChatbot() {
     checkAuthStatus();
   }, []);
 
+  useEffect(() => {
+    if (user) {
+      fetchChats();
+    }
+  }, [user]);
+
+  // This useEffect is removed - we only create chat when user sends first message
+
   // Typing animation effect
   useEffect(() => {
     if (fullResponseText && typingText.length < fullResponseText.length) {
@@ -51,7 +162,11 @@ export default function MenstruationChatbot() {
         setTypingText(fullResponseText.slice(0, typingText.length + 5));
       }, 10);
       return () => clearTimeout(timeout);
-    } else if (fullResponseText && typingText.length === fullResponseText.length && fullResponseText.length > 0) {
+    } else if (
+      fullResponseText &&
+      typingText.length === fullResponseText.length &&
+      fullResponseText.length > 0
+    ) {
       // Typing complete, update the actual message
       setMessages((prev) => {
         const updated = [...prev];
@@ -60,27 +175,130 @@ export default function MenstruationChatbot() {
           ...updated[lastIndex],
           text: fullResponseText,
           isTyping: false,
-          isComplete: true
+          isComplete: true,
         };
         return updated;
       });
-      setFullResponseText('');
-      setTypingText('');
+      setFullResponseText("");
+      setTypingText("");
       setIsTyping(false);
     }
   }, [typingText, fullResponseText]);
 
+  // Fetch all chats for the user
+  const fetchChats = async () => {
+    if (!user) return;
+
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/chat/history`, {
+        credentials: "include",
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setChats(data);
+      }
+    } catch (error) {
+      console.error("Error fetching chats:", error);
+    }
+  };
+
+  // Load a specific chat
+  const loadChat = async (chatId) => {
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/chat/${chatId}`, {
+        credentials: "include",
+      });
+      if (response.ok) {
+        const chat = await response.json();
+        setCurrentChatType("chat");
+        setCurrentChatId(chatId);
+        setMessages(
+          chat.messages.map((msg) => ({
+            id: msg._id || Date.now() + Math.random(),
+            text: msg.content,
+            sender: msg.role === "user" ? "user" : "ai",
+            isComplete: true,
+          }))
+        );
+      }
+    } catch (error) {
+      console.error("Error loading chat:", error);
+    }
+  };
+
+  // Create new chat
+  const createNewChat = async () => {
+    // Prevent creating new chat if already on an empty chat
+    if (currentChatType === "chat" && messages.length === 0) {
+      return;
+    }
+
+    if (!user) {
+      // For non-logged in users, just start a new conversation
+      setCurrentChatType("chat");
+      setCurrentChatId(null);
+      setMessages([]);
+      return;
+    }
+
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/chat/new`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: "New Chat" }),
+      });
+      if (response.ok) {
+        const newChat = await response.json();
+        setCurrentChatType("chat");
+        setCurrentChatId(newChat._id);
+        setMessages([]);
+        fetchChats();
+      }
+    } catch (error) {
+      console.error("Error creating chat:", error);
+    }
+  };
+
+  // Save message to current chat
+  const saveMessageToChat = async (role, content) => {
+    if (!currentChatId || !user || currentChatType !== "chat") return;
+
+    try {
+      await fetch(`${BACKEND_URL}/api/chat/${currentChatId}/message`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role, content }),
+      });
+
+      // Update chat title based on first message
+      if (messages.length === 0 && role === "user") {
+        const title = content.slice(0, 50) + (content.length > 50 ? "..." : "");
+        await fetch(`${BACKEND_URL}/api/chat/${currentChatId}`, {
+          method: "PATCH",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ title }),
+        });
+        fetchChats();
+      }
+    } catch (error) {
+      console.error("Error saving message:", error);
+    }
+  };
+
   const checkAuthStatus = async () => {
     try {
       const response = await fetch(`${BACKEND_URL}/api/auth/me`, {
-        credentials: 'include'
+        credentials: "include",
       });
       if (response.ok) {
         const data = await response.json();
         setUser(data);
       }
     } catch (error) {
-      console.error('Auth check failed:', error);
+      console.error("Auth check failed:", error);
     } finally {
       setIsLoadingUser(false);
     }
@@ -88,21 +306,21 @@ export default function MenstruationChatbot() {
 
   const getDisplayName = () => {
     if (user && user.name) {
-      return user.name.split(' ')[0];
+      return user.name.split(" ")[0];
     }
-    return 'User';
+    return "User";
   };
 
   const getGreeting = () => {
     const hour = new Date().getHours();
-    if (hour < 12) return 'Good Morning';
-    if (hour < 18) return 'Good Afternoon';
-    return 'Good Evening';
+    if (hour < 12) return "Good Morning";
+    if (hour < 18) return "Good Afternoon";
+    return "Good Evening";
   };
 
   const getInitials = (name) => {
-    if (!name) return 'U';
-    const names = name.split(' ');
+    if (!name) return "U";
+    const names = name.split(" ");
     if (names.length >= 2) {
       return (names[0].charAt(0) + names[1].charAt(0)).toUpperCase();
     }
@@ -115,13 +333,13 @@ export default function MenstruationChatbot() {
       setCopiedIndex(index);
       setTimeout(() => setCopiedIndex(null), 2000);
     } catch (err) {
-      console.error('Failed to copy:', err);
+      console.error("Failed to copy:", err);
     }
   };
 
   // Simple markdown parser
   const parseMarkdown = (text) => {
-    const lines = text.split('\n');
+    const lines = text.split("\n");
     const elements = [];
     let currentList = null;
     let listItems = [];
@@ -132,7 +350,7 @@ export default function MenstruationChatbot() {
       if (currentList && listItems.length > 0) {
         elements.push({
           type: currentList,
-          items: [...listItems]
+          items: [...listItems],
         });
         listItems = [];
         currentList = null;
@@ -142,9 +360,9 @@ export default function MenstruationChatbot() {
     const flushCodeBlock = () => {
       if (codeBlock && codeLines.length > 0) {
         elements.push({
-          type: 'code',
+          type: "code",
           language: codeBlock,
-          content: codeLines.join('\n')
+          content: codeLines.join("\n"),
         });
         codeLines = [];
         codeBlock = null;
@@ -153,12 +371,12 @@ export default function MenstruationChatbot() {
 
     lines.forEach((line, index) => {
       // Code blocks
-      if (line.trim().startsWith('```')) {
+      if (line.trim().startsWith("```")) {
         if (codeBlock) {
           flushCodeBlock();
         } else {
           flushList();
-          codeBlock = line.trim().slice(3) || 'text';
+          codeBlock = line.trim().slice(3) || "text";
         }
         return;
       }
@@ -169,46 +387,46 @@ export default function MenstruationChatbot() {
       }
 
       // Headers
-      if (line.startsWith('# ')) {
+      if (line.startsWith("# ")) {
         flushList();
-        elements.push({ type: 'h1', content: line.slice(2) });
-      } else if (line.startsWith('## ')) {
+        elements.push({ type: "h1", content: line.slice(2) });
+      } else if (line.startsWith("## ")) {
         flushList();
-        elements.push({ type: 'h2', content: line.slice(3) });
-      } else if (line.startsWith('### ')) {
+        elements.push({ type: "h2", content: line.slice(3) });
+      } else if (line.startsWith("### ")) {
         flushList();
-        elements.push({ type: 'h3', content: line.slice(4) });
+        elements.push({ type: "h3", content: line.slice(4) });
       }
       // Unordered lists
-      else if (line.trim().startsWith('- ') || line.trim().startsWith('* ')) {
-        if (currentList !== 'ul') {
+      else if (line.trim().startsWith("- ") || line.trim().startsWith("* ")) {
+        if (currentList !== "ul") {
           flushList();
-          currentList = 'ul';
+          currentList = "ul";
         }
         listItems.push(line.trim().slice(2));
       }
       // Ordered lists
       else if (/^\d+\.\s/.test(line.trim())) {
-        if (currentList !== 'ol') {
+        if (currentList !== "ol") {
           flushList();
-          currentList = 'ol';
+          currentList = "ol";
         }
-        listItems.push(line.trim().replace(/^\d+\.\s/, ''));
+        listItems.push(line.trim().replace(/^\d+\.\s/, ""));
       }
       // Blockquotes
-      else if (line.trim().startsWith('> ')) {
+      else if (line.trim().startsWith("> ")) {
         flushList();
-        elements.push({ type: 'blockquote', content: line.trim().slice(2) });
+        elements.push({ type: "blockquote", content: line.trim().slice(2) });
       }
       // Horizontal rule
-      else if (line.trim() === '---' || line.trim() === '***') {
+      else if (line.trim() === "---" || line.trim() === "***") {
         flushList();
-        elements.push({ type: 'hr' });
+        elements.push({ type: "hr" });
       }
       // Regular paragraph
       else if (line.trim()) {
         flushList();
-        elements.push({ type: 'p', content: line });
+        elements.push({ type: "p", content: line });
       }
       // Empty line
       else {
@@ -229,10 +447,10 @@ export default function MenstruationChatbot() {
     let key = 0;
 
     const patterns = [
-      { regex: /\*\*(.+?)\*\*/g, component: 'strong' },
-      { regex: /\*(.+?)\*/g, component: 'em' },
-      { regex: /`(.+?)`/g, component: 'code' },
-      { regex: /\[(.+?)\]\((.+?)\)/g, component: 'link' }
+      { regex: /\*\*(.+?)\*\*/g, component: "strong" },
+      { regex: /\*(.+?)\*/g, component: "em" },
+      { regex: /`(.+?)`/g, component: "code" },
+      { regex: /\[(.+?)\]\((.+?)\)/g, component: "link" },
     ];
 
     while (remaining) {
@@ -240,7 +458,7 @@ export default function MenstruationChatbot() {
       let earliestIndex = Infinity;
       let matchedPattern = null;
 
-      patterns.forEach(pattern => {
+      patterns.forEach((pattern) => {
         pattern.regex.lastIndex = 0;
         const match = pattern.regex.exec(remaining);
         if (match && match.index < earliestIndex) {
@@ -256,18 +474,41 @@ export default function MenstruationChatbot() {
       }
 
       if (earliestIndex > 0) {
-        parts.push(<span key={key++}>{remaining.slice(0, earliestIndex)}</span>);
+        parts.push(
+          <span key={key++}>{remaining.slice(0, earliestIndex)}</span>
+        );
       }
 
-      if (matchedPattern.component === 'strong') {
-        parts.push(<strong key={key++} className="font-semibold text-white">{earliestMatch[1]}</strong>);
-      } else if (matchedPattern.component === 'em') {
-        parts.push(<em key={key++} className="italic text-gray-200">{earliestMatch[1]}</em>);
-      } else if (matchedPattern.component === 'code') {
-        parts.push(<code key={key++} className="bg-red-950/40 text-red-300 px-1.5 py-0.5 rounded text-sm font-mono">{earliestMatch[1]}</code>);
-      } else if (matchedPattern.component === 'link') {
+      if (matchedPattern.component === "strong") {
         parts.push(
-          <a key={key++} href={earliestMatch[2]} target="_blank" rel="noopener noreferrer" className="text-red-400 hover:text-red-300 underline">
+          <strong key={key++} className="font-semibold text-white">
+            {earliestMatch[1]}
+          </strong>
+        );
+      } else if (matchedPattern.component === "em") {
+        parts.push(
+          <em key={key++} className="italic text-gray-200">
+            {earliestMatch[1]}
+          </em>
+        );
+      } else if (matchedPattern.component === "code") {
+        parts.push(
+          <code
+            key={key++}
+            className="bg-red-950/40 text-red-300 px-1.5 py-0.5 rounded text-sm font-mono"
+          >
+            {earliestMatch[1]}
+          </code>
+        );
+      } else if (matchedPattern.component === "link") {
+        parts.push(
+          <a
+            key={key++}
+            href={earliestMatch[2]}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-red-400 hover:text-red-300 underline"
+          >
             {earliestMatch[1]}
           </a>
         );
@@ -281,57 +522,100 @@ export default function MenstruationChatbot() {
 
   const renderMarkdown = (text) => {
     const elements = parseMarkdown(text);
-    
+
     return elements.map((element, index) => {
       switch (element.type) {
-        case 'h1':
-          return <h1 key={index} className="text-2xl font-bold mb-4 text-white mt-2">{formatInline(element.content)}</h1>;
-        case 'h2':
-          return <h2 key={index} className="text-xl font-bold mb-3 text-white mt-4">{formatInline(element.content)}</h2>;
-        case 'h3':
-          return <h3 key={index} className="text-lg font-semibold mb-2 text-white mt-3">{formatInline(element.content)}</h3>;
-        case 'p':
-          return <p key={index} className="mb-3 leading-relaxed text-gray-100">{formatInline(element.content)}</p>;
-        case 'ul':
+        case "h1":
           return (
-            <ul key={index} className="list-disc list-inside mb-3 space-y-1.5 ml-2">
+            <h1 key={index} className="text-2xl font-bold mb-4 text-white mt-2">
+              {formatInline(element.content)}
+            </h1>
+          );
+        case "h2":
+          return (
+            <h2 key={index} className="text-xl font-bold mb-3 text-white mt-4">
+              {formatInline(element.content)}
+            </h2>
+          );
+        case "h3":
+          return (
+            <h3
+              key={index}
+              className="text-lg font-semibold mb-2 text-white mt-3"
+            >
+              {formatInline(element.content)}
+            </h3>
+          );
+        case "p":
+          return (
+            <p key={index} className="mb-3 leading-relaxed text-gray-100">
+              {formatInline(element.content)}
+            </p>
+          );
+        case "ul":
+          return (
+            <ul
+              key={index}
+              className="list-disc list-inside mb-3 space-y-1.5 ml-2"
+            >
               {element.items.map((item, i) => (
-                <li key={i} className="text-gray-100 leading-relaxed">{formatInline(item)}</li>
+                <li key={i} className="text-gray-100 leading-relaxed">
+                  {formatInline(item)}
+                </li>
               ))}
             </ul>
           );
-        case 'ol':
+        case "ol":
           return (
-            <ol key={index} className="list-decimal list-inside mb-3 space-y-1.5 ml-2">
+            <ol
+              key={index}
+              className="list-decimal list-inside mb-3 space-y-1.5 ml-2"
+            >
               {element.items.map((item, i) => (
-                <li key={i} className="text-gray-100 leading-relaxed">{formatInline(item)}</li>
+                <li key={i} className="text-gray-100 leading-relaxed">
+                  {formatInline(item)}
+                </li>
               ))}
             </ol>
           );
-        case 'blockquote':
+        case "blockquote":
           return (
-            <blockquote key={index} className="border-l-4 border-red-600 pl-4 py-2 my-3 bg-red-950/20 rounded-r text-gray-100">
+            <blockquote
+              key={index}
+              className="border-l-4 border-red-600 pl-4 py-2 my-3 bg-red-950/20 rounded-r text-gray-100"
+            >
               {formatInline(element.content)}
             </blockquote>
           );
-        case 'code':
+        case "code":
           return (
-            <div key={index} className="relative my-4 rounded-lg overflow-hidden">
+            <div
+              key={index}
+              className="relative my-4 rounded-lg overflow-hidden"
+            >
               <div className="bg-zinc-800 px-4 py-2 text-xs text-zinc-400 flex items-center justify-between">
                 <span>{element.language}</span>
                 <button
-                  onClick={() => copyToClipboard(element.content, `code-${index}`)}
+                  onClick={() =>
+                    copyToClipboard(element.content, `code-${index}`)
+                  }
                   className="hover:text-white transition-colors"
                 >
-                  {copiedIndex === `code-${index}` ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                  {copiedIndex === `code-${index}` ? (
+                    <Check className="w-4 h-4" />
+                  ) : (
+                    <Copy className="w-4 h-4" />
+                  )}
                 </button>
               </div>
               <pre className="bg-zinc-900 p-4 overflow-x-auto">
-                <code className="text-sm text-gray-100 font-mono">{element.content}</code>
+                <code className="text-sm text-gray-100 font-mono">
+                  {element.content}
+                </code>
               </pre>
             </div>
           );
-        case 'hr':
+        case "hr":
           return <hr key={index} className="my-4 border-red-900/30" />;
         default:
           return null;
@@ -342,49 +626,106 @@ export default function MenstruationChatbot() {
   const handleSend = async () => {
     if (!input.trim()) return;
 
-    const userMessage = { id: Date.now(), text: input, sender: 'user' };
-    setMessages(prev => [...prev, userMessage]);
+    const userMessage = { id: Date.now(), text: input, sender: "user" };
+    setMessages((prev) => [...prev, userMessage]);
     const currentInput = input;
-    setInput('');
+    setInput("");
     setIsTyping(true);
 
-    // Add placeholder message for typing animation
+    // Create new chat if user is logged in and in regular chat mode without a chatId
+    let activeChatId = currentChatId;
+    if (currentChatType === "chat" && user && !currentChatId) {
+      try {
+        const response = await fetch(`${BACKEND_URL}/api/chat/new`, {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title:
+              currentInput.slice(0, 50) + (currentInput.length > 50 ? "..." : ""),
+          }),
+        });
+        if (response.ok) {
+          const newChat = await response.json();
+          activeChatId = newChat._id;
+          setCurrentChatId(newChat._id);
+          fetchChats();
+        }
+      } catch (error) {
+        console.error("Error creating chat:", error);
+      }
+    }
+
+    // Save user message only if in regular chat mode
+    if (currentChatType === "chat" && activeChatId) {
+      try {
+        await fetch(`${BACKEND_URL}/api/chat/${activeChatId}/message`, {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ role: "user", content: currentInput }),
+        });
+      } catch (error) {
+        console.error("Error saving user message:", error);
+      }
+    }
+
     const placeholderId = Date.now() + 1;
-    setMessages(prev => [...prev, { id: placeholderId, text: '', sender: 'ai', isTyping: true }]);
+    setMessages((prev) => [
+      ...prev,
+      { id: placeholderId, text: "", sender: "ai", isTyping: true },
+    ]);
 
     try {
       const response = await fetch(`${BACKEND_URL}/api/chat`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
           message: currentInput,
-          history: messages.map(msg => ({
-            role: msg.sender === 'user' ? 'user' : 'assistant',
-            content: msg.text
-          })),
+          history: messages
+            .filter(
+              (msg) =>
+                msg.sender === "user" ||
+                (msg.sender === "ai" && msg.text && !msg.isTyping)
+            )
+            .map((msg) => ({
+              role: msg.sender === "user" ? "user" : "assistant",
+              content: msg.text,
+            })),
           userName: user?.name || null,
-          userEmail: user?.email || null
-        })
+          userEmail: user?.email || null,
+          chatId: currentChatType === "chat" ? currentChatId : null,
+        }),
       });
 
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
+      if (!response.ok) throw new Error("Network response was not ok");
 
       const data = await response.json();
-      console.log('AI Response:', data);
-      
-      const responseText = data.reply || data.response || "I'm here to help you with your menstrual health questions.";
-      
-      // Start typing animation
+      const responseText =
+        data.reply ||
+        data.response ||
+        "I'm here to help you with your menstrual health questions.";
+
+      // Save AI response only if in regular chat mode
+      if (currentChatType === "chat" && activeChatId) {
+        try {
+          await fetch(`${BACKEND_URL}/api/chat/${activeChatId}/message`, {
+            method: "POST",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ role: "assistant", content: responseText }),
+          });
+        } catch (error) {
+          console.error("Error saving AI message:", error);
+        }
+      }
+
       setFullResponseText(responseText);
-      
     } catch (error) {
-      console.error('Error sending message:', error);
-      const errorMessage = "I'm sorry, I'm having trouble connecting right now. Please try again in a moment.";
+      console.error("Error sending message:", error);
+      const errorMessage =
+        "I'm sorry, I'm having trouble connecting right now. Please try again in a moment.";
       setFullResponseText(errorMessage);
     }
   };
@@ -437,36 +778,110 @@ export default function MenstruationChatbot() {
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
+              onClick={createNewChat}
               className="w-full bg-red-950/30 hover:bg-red-950/40 backdrop-blur-sm border border-red-900/30 rounded-lg px-4 py-2.5 text-left text-sm flex items-center gap-2 transition-all"
             >
               <Plus className="w-4 h-4" />
               New Chat
             </motion.button>
           </div>
-
           <div className="flex-1 overflow-y-auto p-2">
-            <div className="text-xs text-zinc-500 px-3 py-2 font-medium">
-              Recents
-            </div>
             <div className="space-y-1">
+              <div className="text-xs text-zinc-500 px-3 py-2 font-medium">
+                Recents
+              </div>
+
+              {/* Static Items - About and Documentation */}
               <motion.div
                 whileHover={{ backgroundColor: "rgba(127, 29, 29, 0.2)" }}
-                className="px-3 py-2.5 rounded-lg text-sm cursor-pointer bg-red-950/20 backdrop-blur-sm border border-red-900/20"
+                onClick={() => {
+                  setCurrentChatType("about");
+                  setCurrentChatId(null);
+                  setMessages([
+                    {
+                      id: "about-msg",
+                      text: aboutNoorContent,
+                      sender: "ai",
+                      isComplete: true,
+                    },
+                  ]);
+                }}
+                className={`px-3 py-2.5 rounded-lg text-sm cursor-pointer transition-colors ${
+                  currentChatType === "about"
+                    ? "bg-red-950/20 backdrop-blur-sm border border-red-900/20"
+                    : "text-zinc-400"
+                }`}
               >
-                New Chat
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4" />
+                  <span>About Noor AI</span>
+                </div>
               </motion.div>
-              {recentChats.map((chat, index) => (
-                <motion.div
-                  key={index}
-                  whileHover={{ backgroundColor: "rgba(127, 29, 29, 0.2)" }}
-                  className="px-3 py-2.5 rounded-lg text-sm text-zinc-400 cursor-pointer transition-colors"
-                >
-                  {chat}
-                </motion.div>
-              ))}
+
+              <motion.div
+                whileHover={{ backgroundColor: "rgba(127, 29, 29, 0.2)" }}
+                onClick={() => {
+                  setCurrentChatType("docs");
+                  setCurrentChatId(null);
+                  setMessages([
+                    {
+                      id: "docs-msg",
+                      text: documentationContent,
+                      sender: "ai",
+                      isComplete: true,
+                    },
+                  ]);
+                }}
+                className={`px-3 py-2.5 rounded-lg text-sm cursor-pointer transition-colors ${
+                  currentChatType === "docs"
+                    ? "bg-red-950/20 backdrop-blur-sm border border-red-900/20"
+                    : "text-zinc-400"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <BookOpen className="w-4 h-4" />
+                  <span>Documentation</span>
+                </div>
+              </motion.div>
+
+              {/* Divider */}
+              <div className="h-px bg-red-900/20 my-2"></div>
+
+              {/* User Chats */}
+              {user ? (
+                chats.length > 0 ? (
+                  chats.map((chat) => (
+                    <motion.div
+                      key={chat._id}
+                      whileHover={{ backgroundColor: "rgba(127, 29, 29, 0.2)" }}
+                      onClick={() => {
+                        setCurrentChatType("chat");
+                        loadChat(chat._id);
+                      }}
+                      className={`px-3 py-2.5 rounded-lg text-sm cursor-pointer transition-colors ${
+                        currentChatId === chat._id && currentChatType === "chat"
+                          ? "bg-red-950/20 backdrop-blur-sm border border-red-900/20"
+                          : "text-zinc-400"
+                      }`}
+                    >
+                      <div className="font-medium truncate">{chat.title}</div>
+                      <div className="text-xs text-zinc-600 mt-0.5">
+                        {new Date(chat.createdAt).toLocaleDateString()}
+                      </div>
+                    </motion.div>
+                  ))
+                ) : (
+                  <div className="px-3 py-4 text-xs text-zinc-500 text-center">
+                    No chats yet. Start a conversation!
+                  </div>
+                )
+              ) : (
+                <div className="px-3 py-4 text-xs text-zinc-500 text-center">
+                  Sign in to save your chat history
+                </div>
+              )}
             </div>
           </div>
-
           <div className="p-4 border-t border-red-900/20 space-y-3">
             {!isLoadingUser && (
               <div className="flex items-center gap-3 px-2">
@@ -516,12 +931,16 @@ export default function MenstruationChatbot() {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <button onClick={() => router.push('/')} className="px-4 py-2 text-sm text-zinc-400 hover:text-white transition-colors">
+            <button
+              onClick={() => router.push("/")}
+              className="px-4 py-2 text-sm text-zinc-400 hover:text-white transition-colors"
+            >
               Home
             </button>
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
+              onClick={() => router.push("/carehub")}
               className="px-6 py-2 bg-gradient-to-r from-red-600 to-rose-600 rounded-lg text-sm font-medium shadow-lg shadow-red-900/30"
             >
               Get Products

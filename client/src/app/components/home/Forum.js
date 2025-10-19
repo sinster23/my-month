@@ -1,8 +1,10 @@
 "use client";
 import { useState } from "react";
 import { Heart, Sparkles, MessageSquare, ArrowRight } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function ForumSection() {
+  const router = useRouter();
   return (
     <section id="forum" className="relative py-24 overflow-hidden">
       {/* Background Image with Overlay */}
@@ -57,7 +59,7 @@ export default function ForumSection() {
           {/* Action Buttons */}
            <div className="text-center">
           <button
-            onClick={() => window.location.href = "/share-story"}
+            onClick={() => router.push("/stories")}
             className="group relative px-10 py-5 bg-red-500 hover:bg-red-600 text-white font-bold rounded-full text-lg transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-105 overflow-hidden"
             style={{ fontFamily: 'Poppins, sans-serif' }}
           >

@@ -1,8 +1,7 @@
 const { generateResponse } = require("../services/chatService.js");
-
+const Chat = require("../models/Chat.js");
 
 const getUserFromRequest = (req) => {
-  // Priority 1: Check if user is authenticated (from auth middleware)
   if (req.user) {
     return {
       name: req.user.name || req.user.username || null,
@@ -11,7 +10,6 @@ const getUserFromRequest = (req) => {
     };
   }
   
-  // Priority 2: Check session
   if (req.session && req.session.user) {
     return {
       name: req.session.user.name || req.session.user.username || null,
@@ -20,7 +18,6 @@ const getUserFromRequest = (req) => {
     };
   }
   
-  // Priority 3: Check request body (sent from frontend)
   if (req.body.userName) {
     return {
       name: req.body.userName,
@@ -29,7 +26,6 @@ const getUserFromRequest = (req) => {
     };
   }
   
-  // No user found - anonymous
   return null;
 };
 
@@ -37,7 +33,6 @@ const handleChat = async (req, res, next) => {
   try {
     const { message, history } = req.body;
 
-    // Validate message
     if (!message) {
       return res.status(400).json({ 
         error: "Message is required",
@@ -45,7 +40,6 @@ const handleChat = async (req, res, next) => {
       });
     }
 
-    // Validate message is a string and not empty
     if (typeof message !== "string" || message.trim().length === 0) {
       return res.status(400).json({ 
         error: "Invalid message format",
@@ -53,7 +47,6 @@ const handleChat = async (req, res, next) => {
       });
     }
 
-    // Validate history format if provided
     if (history && !Array.isArray(history)) {
       return res.status(400).json({ 
         error: "History must be an array",
@@ -61,11 +54,9 @@ const handleChat = async (req, res, next) => {
       });
     }
 
-    // Extract user information
     const userInfo = getUserFromRequest(req);
     const userName = userInfo?.name || null;
 
-    // Log for debugging and analytics
     console.log('💬 Chat Request:', {
       user: userName || 'Anonymous',
       messageLength: message.length,
@@ -73,25 +64,12 @@ const handleChat = async (req, res, next) => {
       timestamp: new Date().toISOString()
     });
 
-    // Generate AI response with user context
     const reply = await generateResponse(
       message, 
       history || [], 
       userName
     );
 
-    // Optional: Log successful interaction for analytics
-    // You can store this in a database for tracking
-    if (userInfo?.id) {
-      // await logChatInteraction({
-      //   userId: userInfo.id,
-      //   message,
-      //   reply,
-      //   timestamp: new Date()
-      // });
-    }
-
-    // Send successful response
     res.status(200).json({ 
       reply,
       success: true,
@@ -101,7 +79,6 @@ const handleChat = async (req, res, next) => {
   } catch (error) {
     console.error("❌ Chat Controller Error:", error);
 
-    // Handle specific error types
     if (error.message?.includes("quota") || error.message?.includes("429")) {
       return res.status(429).json({
         error: "Rate limit exceeded",
@@ -126,7 +103,6 @@ const handleChat = async (req, res, next) => {
       });
     }
 
-    // Pass to error handling middleware with user-friendly message
     const userFriendlyError = new Error("Failed to process chat message");
     userFriendlyError.originalError = error;
     userFriendlyError.statusCode = 500;
@@ -136,4 +112,98 @@ const handleChat = async (req, res, next) => {
   }
 };
 
-module.exports = { handleChat };
+const getChats = async (req, res) => {
+  try {
+    const chats = await Chat.find({ user: req.user.id })
+      .sort({ createdAt: -1 })
+      .select('title createdAt messages');
+    res.json(chats);
+  } catch (error) {
+    console.error("Error fetching chats:", error);
+    res.status(500).json({ message: "Failed to fetch chats" });
+  }
+};
+
+const getChatById = async (req, res) => {
+  try {
+    const chat = await Chat.findOne({ _id: req.params.id, user: req.user.id });
+    if (!chat) {
+      return res.status(404).json({ message: "Chat not found" });
+    }
+    res.json(chat);
+  } catch (error) {
+    console.error("Error fetching chat:", error);
+    res.status(500).json({ message: "Failed to fetch chat" });
+  }
+};
+
+const createChat = async (req, res) => {
+  try {
+    const chat = new Chat({
+      user: req.user.id,
+      title: req.body.title || "New Chat",
+      messages: [],
+    });
+    await chat.save();
+    res.status(201).json(chat);
+  } catch (error) {
+    console.error("Error creating chat:", error);
+    res.status(500).json({ message: "Failed to create chat" });
+  }
+};
+
+const addMessage = async (req, res) => {
+  try {
+    const { role, content } = req.body;
+    
+    if (!role || !content) {
+      return res.status(400).json({ message: "Role and content are required" });
+    }
+
+    const chat = await Chat.findOne({ _id: req.params.id, user: req.user.id });
+    if (!chat) {
+      return res.status(404).json({ message: "Chat not found" });
+    }
+
+    chat.messages.push({ role, content });
+    await chat.save();
+    res.json(chat);
+  } catch (error) {
+    console.error("Error adding message:", error);
+    res.status(500).json({ message: "Failed to add message" });
+  }
+};
+
+const updateChatTitle = async (req, res) => {
+  try {
+    const { title } = req.body;
+    
+    if (!title || typeof title !== 'string') {
+      return res.status(400).json({ message: "Valid title is required" });
+    }
+
+    const chat = await Chat.findOneAndUpdate(
+      { _id: req.params.id, user: req.user.id },
+      { title: title.trim() },
+      { new: true }
+    );
+    
+    if (!chat) {
+      return res.status(404).json({ message: "Chat not found" });
+    }
+    
+    res.json(chat);
+  } catch (error) {
+    console.error("Error updating chat title:", error);
+    res.status(500).json({ message: "Failed to update chat title" });
+  }
+};
+
+module.exports = { 
+  handleChat, 
+  getChats, 
+  getChatById, 
+  createChat, 
+  addMessage,
+  updateChatTitle 
+};
