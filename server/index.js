@@ -6,6 +6,8 @@ const connectDB = require("./config/db.js");
 const cookieParser = require("cookie-parser");
 const authRoutes = require("./routes/authRoutes.js");
 const chatRoutes = require("./routes/chatRoutes.js");
+const productRoutes = require("./routes/productRoutes.js");
+const cartRoutes = require("./routes/cartRoutes.js");
 const {errorHandler} = require("./middleware/errorHandler.js");
 
 connectDB();
@@ -20,6 +22,8 @@ app.use(cors({
 
 app.use("/api/auth", authRoutes);
 app.use("/api/chat", chatRoutes);
+app.use("/api/products", productRoutes);
+app.use("/api/cart", cartRoutes);
 
 // global error handler
 app.use(errorHandler);
@@ -27,4 +31,3 @@ app.use(errorHandler);
 const PORT = process.env.PORT || 8000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
-// export default app;
