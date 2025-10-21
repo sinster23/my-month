@@ -2,7 +2,8 @@
 "use client";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mail, Edit2, MessageSquare, ShoppingBag, Calendar, Lock, Bell, LogOut, Camera, User, FileText, Download, Trash2, CreditCard } from "lucide-react";
+import OrderTab from "../components/profile/orders";
+import { Cog, Edit2, MessageSquare, ShoppingBag, Calendar, Lock, Bell, Camera, User, Trash2,} from "lucide-react";
 
 export default function ProfilePage() {
   const [user, setUser] = useState(null);
@@ -169,9 +170,7 @@ export default function ProfilePage() {
     { id: "discussions", label: "Discussions", icon: MessageSquare },
     { id: "orders", label: "Orders", icon: ShoppingBag },
     { id: "consultations", label: "Consultations", icon: Calendar },
-    { id: "notifications", label: "Notifications", icon: Bell },
-    { id: "billing", label: "Billing", icon: CreditCard },
-    { id: "export", label: "Data Export", icon: Download },
+    {id: "settings", label: "Settings", icon: Cog},
     { id: "delete", label: "Delete Account", icon: Trash2, danger: true }
   ];
 
@@ -556,27 +555,7 @@ export default function ProfilePage() {
 
       case "orders":
         return (
-          <motion.div 
-            key="orders"
-            variants={contentVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            className="flex flex-col items-center justify-center h-full py-16"
-          >
-            <motion.div 
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.2 }}
-              className="w-20 h-20 rounded-full bg-red-600/10 flex items-center justify-center mb-6"
-            >
-              <ShoppingBag className="w-10 h-10 text-red-500" />
-            </motion.div>
-            <h3 className="text-2xl font-bold text-white mb-3">Coming Soon</h3>
-            <p className="text-gray-400 text-center max-w-md">
-              Track your orders and manage your CareHub purchases.
-            </p>
-          </motion.div>
+          <OrderTab />
         );
 
       case "consultations":

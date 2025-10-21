@@ -372,7 +372,7 @@ export default function CheckoutPage() {
               </div>
 
               {/* Checkout Button */}
-              <button className="w-full py-4 bg-gradient-to-r from-red-500 to-red-600 text-white font-bold rounded-full hover:shadow-lg hover:shadow-red-500/50 transform hover:scale-105 transition-all duration-300 mb-3">
+              <button onClick={()=> router.push("/checkout/confirmorder")} className="w-full py-4 bg-gradient-to-r from-red-500 to-red-600 text-white font-bold rounded-full hover:shadow-lg hover:shadow-red-500/50 transform hover:scale-105 transition-all duration-300 mb-3">
                 Proceed to Checkout
               </button>
 

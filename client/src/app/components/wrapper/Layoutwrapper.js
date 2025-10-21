@@ -6,7 +6,7 @@ import Footer from "../home/Footer";
 
 export default function LayoutWrapper({ children }) {
   const pathname = usePathname();
-  const hideLayout = pathname.startsWith("/chatbot") || pathname.startsWith("/checkout") || pathname.startsWith("/carehub/products") || pathname.startsWith("/profile");
+  const hideLayout = pathname.startsWith("/chatbot") || pathname.startsWith("/checkout") || pathname.startsWith("/carehub/products") || pathname.startsWith("/profile") || pathname.startsWith("/orders/");
 
   return (
     <>
