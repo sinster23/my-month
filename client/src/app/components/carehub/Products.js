@@ -11,6 +11,8 @@ export default function ShopSection() {
   const [showCartPopup, setShowCartPopup] = useState(true);
   const [addingToCart, setAddingToCart] = useState({});
   const scrollContainerRef = useRef(null);
+
+  const [showLoginModal, setShowLoginModal] = useState(false);
   
   const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
   const router = useRouter();
@@ -86,44 +88,45 @@ export default function ShopSection() {
   };
 
   // Add to cart
-  const handleAddToCart = async (product) => {
-    setAddingToCart(prev => ({ ...prev, [product.id]: true }));
+const handleAddToCart = async (product) => {
+  setAddingToCart(prev => ({ ...prev, [product.id]: true }));
 
-    try {
-      const response = await fetch(`${BACKEND_URL}/api/cart/add`, {
-        method: 'POST',
-        credentials: 'include', // Important for sending cookies
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          productId: product.id,
-          quantity: 1
-        })
-      });
+  try {
+    const response = await fetch(`${BACKEND_URL}/api/cart/add`, {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        productId: product.id,
+        quantity: 1,
+      }),
+    });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to add to cart');
-      }
-
-      const data = await response.json();
-      setCartItems(data.items || []);
-      setShowCartPopup(true);
-
-    } catch (err) {
-      console.error('Error adding to cart:', err);
+    if (!response.ok) {
+      const errorData = await response.json();
       
-      // Check if user needs to login
-      if (err.message.includes('login') || err.message.includes('unauthorized')) {
-        alert('Please login to add items to cart');
-      } else {
-        alert('Failed to add item to cart. Please try again.');
+      // Check for authentication error BEFORE throwing
+      if (response.status === 401 || errorData.requiresAuth) {
+        setShowLoginModal(true);
+        setAddingToCart(prev => ({ ...prev, [product.id]: false }));
+        return; // Exit early, don't throw error
       }
-    } finally {
-      setAddingToCart(prev => ({ ...prev, [product.id]: false }));
+      
+      throw new Error(errorData.message || "Failed to add to cart");
     }
-  };
+
+    const data = await response.json();
+    setCartItems(data.items || []);
+    setShowCartPopup(true);
+  } catch (err) {
+    console.error("Error adding to cart:", err);
+    alert("Failed to add item to cart. Please try again.");
+  } finally {
+    setAddingToCart((prev) => ({ ...prev, [product.id]: false }));
+  }
+};
 
   // Add to wishlist (placeholder)
   const handleAddToWishlist = (product) => {
@@ -221,19 +224,28 @@ export default function ShopSection() {
         <div className="flex items-end justify-between mb-20">
           <div>
             <div className="inline-block mb-4">
-              <span className="text-red-500 text-sm font-semibold tracking-widest uppercase" style={{ fontFamily: 'Poppins, sans-serif' }}>
+              <span
+                className="text-red-500 text-sm font-semibold tracking-widest uppercase"
+                style={{ fontFamily: "Poppins, sans-serif" }}
+              >
                 Shop By Bestsellers
               </span>
             </div>
-            
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-4" style={{ fontFamily: 'Poppins, sans-serif' }}>
+
+            <h2
+              className="text-4xl md:text-5xl font-bold text-white mb-4"
+              style={{ fontFamily: "Poppins, sans-serif" }}
+            >
               Trusted. Tested.{" "}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-red-600">
                 Just Loved
               </span>
             </h2>
-            
-            <p className="text-lg text-gray-300 max-w-2xl" style={{ fontFamily: 'Inter, sans-serif' }}>
+
+            <p
+              className="text-lg text-gray-300 max-w-2xl"
+              style={{ fontFamily: "Inter, sans-serif" }}
+            >
               Our Most Sought After Self Care Staples
             </p>
           </div>
@@ -241,32 +253,52 @@ export default function ShopSection() {
           {/* Navigation Arrows */}
           <div className="hidden md:flex gap-3">
             <button
-              onClick={() => scroll('left')}
+              onClick={() => scroll("left")}
               disabled={currentIndex === 0}
               className={`w-12 h-12 flex items-center justify-center rounded-full border-2 transition-all duration-300 ${
                 currentIndex === 0
-                  ? 'border-gray-700 text-gray-700 cursor-not-allowed'
-                  : 'border-red-600 text-red-500 hover:bg-red-600 hover:text-white'
+                  ? "border-gray-700 text-gray-700 cursor-not-allowed"
+                  : "border-red-600 text-red-500 hover:bg-red-600 hover:text-white"
               }`}
               aria-label="Previous products"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 19l-7-7 7-7"
+                />
               </svg>
             </button>
-            
+
             <button
-              onClick={() => scroll('right')}
+              onClick={() => scroll("right")}
               disabled={currentIndex >= maxIndex}
               className={`w-12 h-12 flex items-center justify-center rounded-full border-2 transition-all duration-300 ${
                 currentIndex >= maxIndex
-                  ? 'border-gray-700 text-gray-700 cursor-not-allowed'
-                  : 'border-red-600 text-red-500 hover:bg-red-600 hover:text-white'
+                  ? "border-gray-700 text-gray-700 cursor-not-allowed"
+                  : "border-red-600 text-red-500 hover:bg-red-600 hover:text-white"
               }`}
               aria-label="Next products"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
               </svg>
             </button>
           </div>
@@ -274,7 +306,7 @@ export default function ShopSection() {
 
         {/* Products Carousel */}
         <div className="relative mb-12 overflow-hidden">
-          <div 
+          <div
             ref={scrollContainerRef}
             className="flex gap-2 overflow-x-hidden scroll-smooth"
           >
@@ -283,8 +315,8 @@ export default function ShopSection() {
                 key={product.id}
                 className="group relative flex-shrink-0 bg-gradient-to-br from-zinc-900 to-black border-2 border-red-900/30 rounded-2xl overflow-hidden hover:border-red-500/50 hover:shadow-2xl hover:shadow-red-900/30 transition-all duration-500"
                 style={{
-                  width: 'calc(25% - 6px)',
-                  minWidth: '280px'
+                  width: "calc(25% - 6px)",
+                  minWidth: "280px",
                 }}
               >
                 {/* Discount Badge */}
@@ -324,7 +356,11 @@ export default function ShopSection() {
                       {[...Array(5)].map((_, i) => (
                         <svg
                           key={i}
-                          className={`w-4 h-4 ${i < Math.floor(product.rating) ? 'text-yellow-400' : 'text-gray-600'}`}
+                          className={`w-4 h-4 ${
+                            i < Math.floor(product.rating)
+                              ? "text-yellow-400"
+                              : "text-gray-600"
+                          }`}
                           fill="currentColor"
                           viewBox="0 0 20 20"
                         >
@@ -332,33 +368,44 @@ export default function ShopSection() {
                         </svg>
                       ))}
                     </div>
-                    <span className="text-xs text-gray-400">{product.reviews} Reviews</span>
+                    <span className="text-xs text-gray-400">
+                      {product.reviews} Reviews
+                    </span>
                   </div>
 
                   {/* Product Name */}
-                  <h3 className="text-lg font-bold text-white mb-2 group-hover:text-red-400 transition-colors" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                  <h3
+                    className="text-lg font-bold text-white mb-2 group-hover:text-red-400 transition-colors"
+                    style={{ fontFamily: "Poppins, sans-serif" }}
+                  >
                     {product.name}
                   </h3>
 
                   {/* Description */}
-                  <p className="text-sm text-gray-400 mb-4 line-clamp-2" style={{ fontFamily: 'Inter, sans-serif' }}>
+                  <p
+                    className="text-sm text-gray-400 mb-4 line-clamp-2"
+                    style={{ fontFamily: "Inter, sans-serif" }}
+                  >
                     {product.description}
                   </p>
 
                   {/* Price */}
-                  <div className="text-2xl font-bold text-white mb-4" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                  <div
+                    className="text-2xl font-bold text-white mb-4"
+                    style={{ fontFamily: "Poppins, sans-serif" }}
+                  >
                     {product.price}
                   </div>
 
                   {/* Action Buttons */}
                   <div className="flex gap-2">
-                    <button 
+                    <button
                       onClick={() => handleAddToCart(product)}
                       disabled={product.stock <= 0 || addingToCart[product.id]}
                       className={`flex-1 py-3 px-4 text-sm font-semibold rounded-full transition-all duration-300 ${
                         product.stock <= 0 || addingToCart[product.id]
-                          ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
-                          : 'bg-gradient-to-r from-red-500 to-red-600 text-white hover:shadow-lg hover:shadow-red-500/50 transform hover:scale-105'
+                          ? "bg-gray-700 text-gray-400 cursor-not-allowed"
+                          : "bg-gradient-to-r from-red-500 to-red-600 text-white hover:shadow-lg hover:shadow-red-500/50 transform hover:scale-105"
                       }`}
                     >
                       {addingToCart[product.id] ? (
@@ -366,14 +413,28 @@ export default function ShopSection() {
                           <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                           Adding...
                         </span>
-                      ) : product.stock <= 0 ? 'Out of Stock' : 'Add To Cart'}
+                      ) : product.stock <= 0 ? (
+                        "Out of Stock"
+                      ) : (
+                        "Add To Cart"
+                      )}
                     </button>
-                    <button 
+                    <button
                       onClick={() => handleAddToWishlist(product)}
                       className="w-12 h-12 flex items-center justify-center border-2 border-red-600/50 text-red-500 rounded-full hover:bg-red-600 hover:text-white hover:border-red-600 transition-all duration-300"
                     >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                        />
                       </svg>
                     </button>
                   </div>
@@ -388,7 +449,10 @@ export default function ShopSection() {
 
         {/* View All Products Button */}
         <div className="flex justify-center">
-          <button onClick={() => router.push("/carehub/products")} className="group relative px-12 py-4 bg-transparent border-2 border-red-600 text-white text-lg font-semibold rounded-full hover:bg-red-600 hover:shadow-xl hover:shadow-red-500/50 transform hover:scale-105 transition-all duration-300 overflow-hidden">
+          <button
+            onClick={() => router.push("/carehub/products")}
+            className="group relative px-12 py-4 bg-transparent border-2 border-red-600 text-white text-lg font-semibold rounded-full hover:bg-red-600 hover:shadow-xl hover:shadow-red-500/50 transform hover:scale-105 transition-all duration-300 overflow-hidden"
+          >
             <span className="relative z-10">View All Products</span>
             <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-red-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           </button>
@@ -397,22 +461,25 @@ export default function ShopSection() {
 
       {/* Cart Popup - Swiggy/Zomato Style - Always visible when cart has items */}
       {showCartPopup && cartItems.length > 0 && (
-        <div 
+        <div
           className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 animate-slide-up"
           style={{
-            animation: 'slideUp 0.3s ease-out'
+            animation: "slideUp 0.3s ease-out",
           }}
         >
           <div className="bg-gradient-to-r from-red-600 to-red-700 rounded-full shadow-2xl shadow-red-900/50 px-6 py-4 flex items-center gap-4 min-w-[320px] border-2 border-red-400/30">
             {/* Product Images */}
             <div className="flex -space-x-3">
               {getCartProducts().map((item, idx) => (
-                <div 
+                <div
                   key={idx}
                   className="w-12 h-12 rounded-full border-3 border-white overflow-hidden bg-white shadow-lg"
                 >
-                  <img 
-                    src={item.product?.image || 'https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=100&h=100&fit=crop'} 
+                  <img
+                    src={
+                      item.product?.image ||
+                      "https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=100&h=100&fit=crop"
+                    }
                     alt="Product"
                     className="w-full h-full object-cover"
                   />
@@ -423,21 +490,104 @@ export default function ShopSection() {
             {/* Cart Info */}
             <div className="flex-1">
               <p className="text-white font-bold text-sm">
-                {getTotalItems()} {getTotalItems() === 1 ? 'item' : 'items'} in cart
+                {getTotalItems()} {getTotalItems() === 1 ? "item" : "items"} in
+                cart
               </p>
-              <p className="text-red-100 text-xs">Added to cart successfully!</p>
+              <p className="text-red-100 text-xs">
+                Added to cart successfully!
+              </p>
             </div>
 
             {/* View Cart Button */}
-            <button 
-              onClick={() => router.push('/checkout')}
+            <button
+              onClick={() => router.push("/checkout")}
               className="bg-white text-red-600 px-6 py-2 rounded-full font-bold text-sm hover:bg-red-50 transition-all duration-300 flex items-center gap-2 shadow-lg"
             >
               View Cart
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
               </svg>
             </button>
+          </div>
+        </div>
+      )}
+      {/* Login Modal */}
+      {showLoginModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+          <div className="bg-gradient-to-br from-zinc-900 to-black border-2 border-red-500/30 rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl shadow-red-900/50 animate-scale-in">
+            {/* Close button */}
+            <button
+              onClick={() => setShowLoginModal(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
+            >
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+
+            {/* Icon */}
+            <div className="flex justify-center mb-6">
+              <div className="w-16 h-16 bg-red-600/20 rounded-full flex items-center justify-center">
+                <svg
+                  className="w-8 h-8 text-red-500"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+                  />
+                </svg>
+              </div>
+            </div>
+
+            {/* Content */}
+            <h3
+              className="text-2xl font-bold text-white text-center mb-3"
+              style={{ fontFamily: "Poppins, sans-serif" }}
+            >
+              Login Required
+            </h3>
+            <p
+              className="text-gray-300 text-center mb-8"
+              style={{ fontFamily: "Inter, sans-serif" }}
+            >
+              Please login to add items to your cart and enjoy a seamless
+              shopping experience.
+            </p>
+
+            {/* Buttons */}
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={() => setShowLoginModal(false)}
+                className="w-full py-3 px-6 bg-gradient-to-r from-red-500 to-red-600 text-white font-semibold rounded-full hover:shadow-lg hover:shadow-red-500/50 transform hover:scale-105 transition-all duration-300"
+              >
+                Continue Browsing
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -455,6 +605,20 @@ export default function ShopSection() {
             transform: translate(-50%, 0);
             opacity: 1;
           }
+        }
+        @keyframes scaleIn {
+          from {
+            transform: scale(0.9);
+            opacity: 0;
+          }
+          to {
+            transform: scale(1);
+            opacity: 1;
+          }
+        }
+
+        .animate-scale-in {
+          animation: scaleIn 0.3s ease-out;
         }
       `}</style>
     </section>

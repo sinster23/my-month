@@ -8,6 +8,7 @@ const authRoutes = require("./routes/authRoutes.js");
 const chatRoutes = require("./routes/chatRoutes.js");
 const productRoutes = require("./routes/productRoutes.js");
 const cartRoutes = require("./routes/cartRoutes.js");
+const profileRoutes = require("./routes/profileRoutes.js");
 const {errorHandler} = require("./middleware/errorHandler.js");
 
 connectDB();
@@ -24,6 +25,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/cart", cartRoutes);
+app.use("/api/profile", profileRoutes);
 
 // global error handler
 app.use(errorHandler);

@@ -207,7 +207,7 @@ export default function CheckoutPage() {
               Add some products to get started
             </p>
             <button 
-              onClick={() => router.push("/carehub")}
+              onClick={() => router.push("/carehub/products")}
               className="px-8 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white font-semibold rounded-full hover:shadow-lg hover:shadow-red-500/50 transform hover:scale-105 transition-all duration-300"
             >
               Continue Shopping

@@ -39,6 +39,13 @@ exports.removeFromCart = async (req, res) => {
 // Add item to cart - Fixed version
 exports.addToCart = async (req, res) => {
   try {
+    // Check if user is authenticated
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ 
+        message: "Please login to add items to cart",
+        requiresAuth: true 
+      });
+    }
     const { productId, quantity = 1 } = req.body;
     
     // Verify product exists
