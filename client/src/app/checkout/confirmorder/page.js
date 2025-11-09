@@ -477,7 +477,7 @@ export default function ConfirmOrderPage() {
               </button>
 
               <button
-                onClick={() => router.push("/carehub/checkout")}
+                onClick={() => router.push("/checkout")}
                 className="w-full py-3 bg-transparent border-2 border-gray-700 text-white rounded-full hover:border-red-600 transition-all duration-300"
               >
                 Back to Cart

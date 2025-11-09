@@ -1,104 +1,70 @@
 "use client";
 import { motion } from "framer-motion";
-import { Stethoscope, Calendar, MessageCircle, Award, Star, ChevronLeft, ChevronRight } from "lucide-react";
+import { Stethoscope, MessageCircle, Award, Star, ChevronLeft, ChevronRight } from "lucide-react";
 import { Autoplay, EffectCoverflow, Navigation, Pagination } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css/effect-coverflow";
 import "swiper/css/pagination";
 import "swiper/css/navigation";
 import "swiper/css";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export default function ExpertConsultation() {
-    const experts = [
-    {
-      id: 1,
-      name: "Dr. Ananya Sharma",
-      specialty: "Gynecologist & Obstetrician",
-      experience: "15+ years",
-      image: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=800&h=1000&fit=crop",
-      tags: ["PCOS Specialist", "Adolescent Health", "Reproductive Care"],
-      rating: 4.9,
-      reviews: 342,
-      availability: "Available Today"
-    },
-    {
-      id: 2,
-      name: "Dr. Meera Patel",
-      specialty: "Nutritionist & Wellness Coach",
-      experience: "12+ years",
-      image: "https://images.unsplash.com/photo-1594824476967-48c8b964273f?w=800&h=1000&fit=crop",
-      tags: ["Hormonal Balance", "Diet Planning", "Holistic Nutrition"],
-      rating: 4.8,
-      reviews: 287,
-      availability: "Next Available: Tomorrow"
-    },
-    {
-      id: 3,
-      name: "Dr. Priya Malhotra",
-      specialty: "Clinical Psychologist",
-      experience: "10+ years",
-      image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&h=1000&fit=crop",
-      tags: ["Mental Health", "Stress Management", "Body Positivity"],
-      rating: 4.9,
-      reviews: 421,
-      availability: "Available Today"
-    },
-    {
-      id: 4,
-      name: "Pandit Rajesh Kumar",
-      specialty: "Vedic Health Advisor",
-      experience: "20+ years",
-      image: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=800&h=1000&fit=crop",
-      tags: ["Ayurveda", "Spiritual Wellness", "Traditional Wisdom"],
-      rating: 4.7,
-      reviews: 198,
-      availability: "Available This Week"
-    },
-    {
-      id: 5,
-      name: "Dr. Fatima Rizvi",
-      specialty: "Endocrinologist",
-      experience: "14+ years",
-      image: "https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=800&h=1000&fit=crop",
-      tags: ["Hormonal Disorders", "PCOS", "Thyroid Specialist"],
-      rating: 4.9,
-      reviews: 356,
-      availability: "Available Today"
-    },
-    {
-      id: 6,
-      name: "Sister Mary Thomas",
-      specialty: "Faith-Based Counselor",
-      experience: "18+ years",
-      image: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=800&h=1000&fit=crop",
-      tags: ["Faith Guidance", "Community Support", "Pastoral Care"],
-      rating: 4.8,
-      reviews: 234,
-      availability: "Next Available: Tomorrow"
-    },
-    {
-      id: 7,
-      name: "Dr. Kavita Reddy",
-      specialty: "Adolescent Health Specialist",
-      experience: "11+ years",
-      image: "https://images.unsplash.com/photo-1607990281513-2c110a25bd8c?w=800&h=1000&fit=crop",
-      tags: ["Teen Health", "Puberty Care", "Education"],
-      rating: 4.8,
-      reviews: 312,
-      availability: "Available Today"
-    },
-    {
-      id: 8,
-      name: "Dr. Sanjay Mehta",
-      specialty: "General Physician",
-      experience: "16+ years",
-      image: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=800&h=1000&fit=crop",
-      tags: ["Primary Care", "Women's Health", "Preventive Medicine"],
-      rating: 4.7,
-      reviews: 289,
-      availability: "Available This Week"
-    }
-  ];
+  const [experts, setExperts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+  const router = useRouter();
+
+  useEffect(() => {
+    const fetchDoctors = async () => {
+      try {
+        const response = await fetch(`${BACKEND_URL}/api/doctors`); // Adjust the API endpoint as needed
+        if (!response.ok) throw new Error('Failed to fetch doctors');
+        const doctors = await response.json();
+        
+        // Transform the doctor data to match the experts format
+        const transformedExperts = doctors.map(doctor => ({
+          id: doctor._id,
+          name: doctor.name,
+          specialty: doctor.specialization,
+          experience: `${doctor.experience}+ years`,
+          image: doctor.image || "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=800&h=1000&fit=crop",
+          tags: doctor.description ? [doctor.description.substring(0, 30)] : ["Healthcare Professional"],
+          rating: doctor.rating || 4.8,
+          reviews: doctor.reviews || 250,
+          availability: doctor.availableSlots && doctor.availableSlots.length > 0 ? "Available Today" : "Contact for Availability",
+          consultationFee: doctor.consultationFee
+        }));
+        
+        setExperts(transformedExperts);
+        setLoading(false);
+      } catch (err) {
+        console.error('Error fetching doctors:', err);
+        setError(err.message);
+        setLoading(false);
+      }
+    };
+
+    fetchDoctors();
+  }, []);
+
+  // Fallback expert for demo if no data
+  const fallbackExpert = {
+    id: 1,
+    name: "Dr. Ananya Sharma",
+    specialty: "Gynecologist & Obstetrician",
+    experience: "15+ years",
+    image: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=800&h=1000&fit=crop",
+    tags: ["PCOS Specialist", "Adolescent Health", "Reproductive Care"],
+    rating: 4.9,
+    reviews: 342,
+    availability: "Available Today"
+  };
+
+  const displayExperts = experts.length > 0 ? experts : [fallbackExpert];
 
   const css = `
   .ExpertCarousel {
@@ -167,6 +133,16 @@ export default function ExpertConsultation() {
           transition={{ duration: 0.3, delay: 0.5 }}
           className="relative w-full max-w-6xl mx-auto px-5"
         >
+          {loading ? (
+            <div className="flex justify-center items-center h-96">
+              <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-red-500"></div>
+            </div>
+          ) : error ? (
+            <div className="text-center text-red-400 p-8 bg-red-500/10 rounded-lg">
+              <p className="text-lg">Error loading experts: {error}</p>
+              <p className="text-sm text-gray-400 mt-2">Please try again later</p>
+            </div>
+          ) : (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -179,7 +155,7 @@ export default function ExpertConsultation() {
               grabCursor={true}
               slidesPerView="auto"
               centeredSlides={true}
-              loop={true}
+              loop={displayExperts.length > 1}
               coverflowEffect={{
                 rotate: 40,
                 stretch: 0,
@@ -195,7 +171,7 @@ export default function ExpertConsultation() {
               className="ExpertCarousel"
               modules={[EffectCoverflow, Pagination, Navigation]}
             >
-              {experts.map((expert, index) => (
+              {displayExperts.map((expert, index) => (
                 <SwiperSlide key={index}>
                   <div className="relative h-full w-full overflow-hidden rounded-3xl bg-gradient-to-br from-zinc-900 via-zinc-800 to-black">
                     <div 
@@ -241,11 +217,11 @@ export default function ExpertConsultation() {
                       </div>
 
                       <div className="flex gap-3">
-                        <button className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-red-500 to-red-600 rounded-lg transition-all duration-300 transform hover:-translate-y-0.5 hover:shadow-xl hover:shadow-red-500/30">
-                          <Calendar className="w-4 h-4 text-white" />
+                        <button onClick={()=>router.push(`/carehub/doctors/${expert.id}`)} className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-red-500 to-red-600 rounded-lg transition-all duration-300 transform hover:-translate-y-0.5 hover:shadow-xl hover:shadow-red-500/30">
                           <span className="text-white font-semibold text-sm" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                            Book
+                            View Details
                           </span>
+                          <ChevronRight className="w-4 h-4 text-white" />
                         </button>
                         <button className="flex items-center justify-center gap-2 px-4 py-3 bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 rounded-lg transition-all duration-300">
                           <MessageCircle className="w-4 h-4 text-white" />
@@ -269,6 +245,7 @@ export default function ExpertConsultation() {
               </div>
             </Swiper>
           </motion.div>
+          )}
         </motion.div>
 
         <motion.div 

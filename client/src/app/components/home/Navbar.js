@@ -2,11 +2,13 @@
 import { useState, useEffect } from "react";
 import { LogOut, User } from "lucide-react";
 import AuthModal from '../auth/authModal';
+import HealthOnboarding from '../auth/health-onboarding'; // Import the onboarding component
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const [user, setUser] = useState(null);
   const [showDropdown, setShowDropdown] = useState(false);
 
@@ -41,9 +43,29 @@ export default function Navbar() {
       if (response.ok) {
         const data = await response.json();
         setUser(data);
+        
+        // Check if user needs to complete health profile
+        checkHealthProfileStatus();
       }
     } catch (error) {
       console.error('Auth check failed:', error);
+    }
+  };
+
+  const checkHealthProfileStatus = async () => {
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/profile/health/status`, {
+        credentials: 'include'
+      });
+      if (response.ok) {
+        const data = await response.json();
+        // Only show onboarding if profile is incomplete
+        if (!data.isComplete) {
+          setShowOnboarding(true);
+        }
+      }
+    } catch (error) {
+      console.error('Health profile check failed:', error);
     }
   };
 
@@ -75,9 +97,30 @@ export default function Navbar() {
     setIsMobileMenuOpen(false);
   };
 
-  const handleModalClose = () => {
+  const handleModalClose = (result) => {
     setShowModal(false);
-    checkAuthStatus(); // Refresh auth status after modal closes
+    
+    // If result indicates onboarding should be shown
+    if (result?.showOnboarding) {
+      checkAuthStatus(); // Refresh user data
+      setShowOnboarding(true);
+    } else {
+      checkAuthStatus(); // Just refresh user data
+    }
+  };
+
+  const handleOnboardingComplete = () => {
+    setShowOnboarding(false);
+    // Show success message or redirect
+    alert('🌸 Profile completed! Welcome to your wellness journey!');
+    // Optionally redirect to dashboard
+    // window.location.href = '/dashboard';
+  };
+
+  const handleOnboardingSkip = () => {
+    setShowOnboarding(false);
+    // Optionally show a reminder
+    alert('You can complete your profile anytime from your Profile page.');
   };
 
   const getInitials = (name) => {
@@ -321,11 +364,20 @@ export default function Navbar() {
         <div className="h-px bg-gradient-to-r from-transparent via-red-600/50 to-transparent" />
       </nav>
 
-      {/* Auth Modal - render outside nav to avoid z-index issues */}
+      {/* Auth Modal */}
       {showModal && (
         <AuthModal 
           isOpen={showModal}
           onClose={handleModalClose} 
+        />
+      )}
+
+      {/* Health Onboarding Modal */}
+      {showOnboarding && (
+        <HealthOnboarding
+          isOpen={showOnboarding}
+          onComplete={handleOnboardingComplete}
+          onSkip={handleOnboardingSkip}
         />
       )}
     </>

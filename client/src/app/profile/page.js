@@ -1,9 +1,10 @@
-
 "use client";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import OrderTab from "../components/profile/orders";
-import { Cog, Edit2, MessageSquare, ShoppingBag, Calendar, Lock, Bell, Camera, User, Trash2,} from "lucide-react";
+import HealthProfileTab from "../components/profile/health";
+import SettingsTab from "../components/profile/settings";
+import { Cog, Edit2, MessageSquare, ShoppingBag, Calendar, Camera, User, Heart } from "lucide-react";
 
 export default function ProfilePage() {
   const [user, setUser] = useState(null);
@@ -166,12 +167,11 @@ export default function ProfilePage() {
 
   const menuItems = [
     { id: "profile", label: "My Profile", icon: User },
-    { id: "security", label: "Security", icon: Lock },
+    { id: "health", label: "Health Profile", icon: Heart },
     { id: "discussions", label: "Discussions", icon: MessageSquare },
     { id: "orders", label: "Orders", icon: ShoppingBag },
     { id: "consultations", label: "Consultations", icon: Calendar },
-    {id: "settings", label: "Settings", icon: Cog},
-    { id: "delete", label: "Delete Account", icon: Trash2, danger: true }
+    { id: "settings", label: "Settings", icon: Cog }
   ];
 
   // Animation variants
@@ -502,31 +502,8 @@ export default function ProfilePage() {
           </motion.div>
         );
 
-      case "security":
-        return (
-          <motion.div
-            key="security"
-            variants={contentVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-          >
-            <h2 className="text-2xl font-bold text-white mb-6">Security</h2>
-            <div className="space-y-4">
-              <button className="w-full flex items-center justify-between p-5 bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700/50 rounded-xl transition-all duration-300 group cursor-pointer">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-red-600/10 flex items-center justify-center">
-                    <Lock className="w-6 h-6 text-red-500" />
-                  </div>
-                  <div className="text-left">
-                    <p className="text-white font-semibold">Change Password</p>
-                    <p className="text-gray-400 text-sm">Update your security credentials</p>
-                  </div>
-                </div>
-              </button>
-            </div>
-          </motion.div>
-        );
+      case "health":
+        return <HealthProfileTab key="health" />;
 
       case "discussions":
         return (
@@ -554,9 +531,7 @@ export default function ProfilePage() {
         );
 
       case "orders":
-        return (
-          <OrderTab />
-        );
+        return <OrderTab key="orders" />;
 
       case "consultations":
         return (
@@ -583,85 +558,8 @@ export default function ProfilePage() {
           </motion.div>
         );
 
-      case "notifications":
-        return (
-          <motion.div
-            key="notifications"
-            variants={contentVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-          >
-            <h2 className="text-2xl font-bold text-white mb-6">Notifications</h2>
-            <div className="space-y-4">
-              <button className="w-full flex items-center justify-between p-5 bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700/50 rounded-xl transition-all cursor-pointer">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-red-600/10 flex items-center justify-center">
-                    <Bell className="w-6 h-6 text-red-500" />
-                  </div>
-                  <div className="text-left">
-                    <p className="text-white font-semibold">Notification Preferences</p>
-                    <p className="text-gray-400 text-sm">Customize your alerts and reminders</p>
-                  </div>
-                </div>
-              </button>
-            </div>
-          </motion.div>
-        );
-
-      case "billing":
-        return (
-          <motion.div 
-            key="billing"
-            variants={contentVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            className="flex flex-col items-center justify-center h-full py-16"
-          >
-            <h3 className="text-2xl font-bold text-white mb-3">Billing</h3>
-            <p className="text-gray-400 text-center max-w-md">
-              Manage your payment methods and billing information.
-            </p>
-          </motion.div>
-        );
-
-      case "export":
-        return (
-          <motion.div 
-            key="export"
-            variants={contentVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            className="flex flex-col items-center justify-center h-full py-16"
-          >
-            <h3 className="text-2xl font-bold text-white mb-3">Data Export</h3>
-            <p className="text-gray-400 text-center max-w-md">
-              Download your personal data and activity history.
-            </p>
-          </motion.div>
-        );
-
-      case "delete":
-        return (
-          <motion.div 
-            key="delete"
-            variants={contentVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            className="flex flex-col items-center justify-center h-full py-16"
-          >
-            <h3 className="text-2xl font-bold text-red-500 mb-3">Delete Account</h3>
-            <p className="text-gray-400 text-center max-w-md mb-6">
-              Permanently delete your account and all associated data. This action cannot be undone.
-            </p>
-            <button className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-all cursor-pointer">
-              Delete My Account
-            </button>
-          </motion.div>
-        );
+      case "settings":
+        return <SettingsTab key="settings" />;
 
       default:
         return null;
@@ -700,8 +598,6 @@ export default function ProfilePage() {
                     className={`w-full text-left px-4 py-3 rounded-lg transition-all cursor-pointer flex items-center gap-3 ${
                       activeSection === item.id
                         ? "bg-red-600/20 text-white border border-red-600/30"
-                        : item.danger
-                        ? "text-red-400 hover:bg-red-900/10"
                         : "text-gray-400 hover:bg-zinc-800/50 hover:text-white"
                     }`}
                   >
@@ -716,7 +612,9 @@ export default function ProfilePage() {
           {/* Right Content */}
           <div className="lg:col-span-3">
             <div className="bg-gradient-to-br from-zinc-900/50 to-black/50 rounded-xl border border-zinc-800/50 p-6 sm:p-8 min-h-[600px]">
-              {renderContent()}
+              <AnimatePresence mode="wait">
+                {renderContent()}
+              </AnimatePresence>
             </div>
           </div>
         </div>

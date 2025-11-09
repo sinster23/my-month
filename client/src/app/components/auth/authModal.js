@@ -70,8 +70,30 @@ export default function AuthModal({ isOpen = true, onClose }) {
       }
 
       console.log('Logged in:', data.user);
+      
+      // Check if user needs to complete health profile
+      try {
+        const statusResponse = await fetch(`${BACKEND_URL}/api/profile/health/status`, {
+          credentials: 'include'
+        });
+        
+        if (statusResponse.ok) {
+          const statusData = await statusResponse.json();
+          if (!statusData.isComplete) {
+            // User needs onboarding
+            if (onClose) {
+              onClose({ showOnboarding: true });
+            }
+            return;
+          }
+        }
+      } catch (err) {
+        console.error('Failed to check health profile status:', err);
+      }
+
+      // Normal login - no onboarding needed
       if (onClose) {
-        onClose();
+        onClose({ showOnboarding: false });
       }
     } catch (err) {
       setError(err.message);
@@ -119,16 +141,36 @@ export default function AuthModal({ isOpen = true, onClose }) {
         throw new Error(data.message || 'Registration failed');
       }
 
-      setError('');
-      setFormData({
-        firstName: '',
-        lastName: '',
-        email: formData.email,
-        password: '',
-        confirmPassword: ''
+      // Auto-login after successful registration
+      const loginResponse = await fetch(`${BACKEND_URL}/api/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password
+        }),
+        credentials: 'include'
       });
-      setIsSignIn(true);
-      alert('Registration successful! Please sign in.');
+
+      if (loginResponse.ok) {
+        // Trigger onboarding for new user
+        if (onClose) {
+          onClose({ showOnboarding: true });
+        }
+      } else {
+        // If auto-login fails, just close and ask user to login
+        setError('Registration successful! Please sign in.');
+        setFormData({
+          firstName: '',
+          lastName: '',
+          email: formData.email,
+          password: '',
+          confirmPassword: ''
+        });
+        setIsSignIn(true);
+      }
     } catch (err) {
       setError(err.message);
     } finally {
@@ -138,7 +180,7 @@ export default function AuthModal({ isOpen = true, onClose }) {
 
   const handleClose = () => {
     if (onClose) {
-      onClose();
+      onClose({ showOnboarding: false });
     }
   };
 
