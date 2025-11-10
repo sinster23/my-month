@@ -128,24 +128,10 @@ export default function Testimonials() {
 
   return (
     <section className="relative w-full py-24 md:py-32 overflow-hidden bg-black">
-      {/* Static Background Image with Gradient Overlays */}
-      <div className="absolute inset-0">
-        <div className="absolute inset-0">
-          <div 
-            className="w-full h-full bg-gradient-to-br from-zinc-800 via-zinc-900 to-black"
-            style={{
-              backgroundImage: 'url(/carehub.png)',
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-            }}
-          />
-          <div className="absolute inset-0 bg-gradient-to-br from-red-900/80 via-black/90 to-red-950/80" />
-        </div>
-        
-        <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-black to-transparent" />
-        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black to-transparent" />
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/3 left-10 w-96 h-96 bg-red-500/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 right-10 w-96 h-96 bg-red-500/10 rounded-full blur-3xl" />
       </div>
-
       {/* Content Container */}
       <div className="relative mx-auto px-6 md:px-12">
         {/* Header Section */}

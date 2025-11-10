@@ -1,6 +1,7 @@
 import CTASection from "../components/carehub/Cta";
 import ExpertConsultation from "../components/carehub/Experts";
 import CareHubHero from "../components/carehub/Hero";
+import NearbyCareSection from "../components/carehub/Nearby";
 import ShopSection from "../components/carehub/Products";
 import Testimonials from "../components/carehub/Testimonials";
 
@@ -10,8 +11,8 @@ export default function Home() {
       <CareHubHero />
       <ShopSection />
       <ExpertConsultation />
+      <NearbyCareSection />
       <Testimonials />
-      <CTASection />
     </main>
   );
 }

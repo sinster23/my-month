@@ -6,6 +6,8 @@ import Navbar from "../home/Navbar";
 import Footer from "../home/Footer";
 import FeedbackModal from "../feedback/feedback-modal"; // Adjust path as needed
 import FeedbackReminder from "../feedback/feedback-reminder"; // Adjust path as needed
+import EmergencyButton from "../emergency/emergency-button";
+
 
 export default function LayoutWrapper({ children }) {
   const pathname = usePathname();
@@ -14,6 +16,7 @@ export default function LayoutWrapper({ children }) {
   const hideLayout = pathname.startsWith("/chatbot") || 
     pathname.startsWith("/checkout") || 
     pathname.startsWith("/carehub/products") || 
+    pathname.startsWith("/carehub/nearby") || 
     pathname.startsWith("/profile") || 
     pathname.startsWith("/orders/") || 
     pathname.startsWith("/carehub/doctors");
@@ -33,6 +36,7 @@ export default function LayoutWrapper({ children }) {
         isOpen={isFeedbackOpen} 
         onClose={() => setIsFeedbackOpen(false)} 
       />
+       {!hideLayout && <EmergencyButton />}
       
       {/* Feedback Reminder - Only show on pages with layout */}
       {!hideLayout && <FeedbackReminder onOpenFeedback={handleOpenFeedback} />}

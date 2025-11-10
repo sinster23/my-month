@@ -13,6 +13,7 @@ const orderRoutes = require("./routes/orderRoutes.js");
 const appointmentRoutes = require("./routes/appointmentRoutes.js");
 const doctorRoutes = require("./routes/doctorRoutes.js");
 const feedbackRoutes = require("./routes/feedbackRoutes.js");
+const locationRoutes = require("./routes/locationRoutes.js");
 const {errorHandler} = require("./middleware/errorHandler.js");
 
 connectDB();
@@ -34,6 +35,7 @@ app.use('/api/orders', orderRoutes);
 app.use("/api/doctors", doctorRoutes);
 app.use("/api/appointments", appointmentRoutes);
 app.use("/api/feedback", feedbackRoutes);
+app.use("/api/location", locationRoutes);
 
 // global error handler
 app.use(errorHandler);
